@@ -2,6 +2,7 @@ from typing import List
 import unittest
 import re
 from src.config import config
+from src import main
 
 reg_adv_topic_cpp = config['cpp']['topics']['advertiser']['regex']
 reg_sub_topic_cpp = config['cpp']['topics']['subscribers']['regex']
@@ -20,6 +21,19 @@ class TestRegex(unittest.TestCase):
             print(m.group(1))
         else:
             print('No match')
+
+    def test_parseline_cpp(self):
+        line = 'fePublisher = privateNodeHandle.advertise<my_msgs::Float32Array>("get", 1, true);'
+        regex = reg_adv_topic_cpp
+        result = main.parse_line(line, regex, 'cpp')
+        self.assertEqual(result['node_handle'], 'privateNodeHandle')
+        self.assertEqual(result['name'], '"get"')
+
+    def test_parseline_python(self):
+        line = 'self.name_publisher = rospy.Publisher("~name", String, queue_size=1)'
+        regex = reg_adv_topic_py
+        result = main.parse_line(line, regex, 'python')
+        self.assertEqual(result['name'], '"~name"')
 
     def reg_match_line(self, reg: str,  line: str, groups: List[str]):
         match = re.search(reg, line)
