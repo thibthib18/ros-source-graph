@@ -17,7 +17,7 @@ config = {
         'insert_code_after': ['{',
                               '''std::string resolvedName = {0}.resolveName({1});''',
                               # `"` -> `\"` -> `\\\"`, quotes are escaped twice: once for python format to fill the fields, another one for the C++ log
-                              '''ROS_ERROR_STREAM("{{\\\"prefix\\\": \\\"{0}\\\", \\\"resource\\\": \\\"{1}\\\", \\\"type\\\": \\\"{2}\\\", \\\"file\\\": \\\"{3}\\\" ,\\\"line\\\": \\\"{4}\\\", \\\"resolved_name\\\": \\\""<< resolvedName <<"\\\"}}");''',
+                              '''ROS_ERROR_STREAM("{{\\\"prefix\\\": \\\"{0}\\\", \\\"resource\\\": \\\"{1}\\\", \\\"type\\\": \\\"{2}\\\", \\\"file\\\": \\\"{3}\\\" ,\\\"line\\\": {4}, \\\"resolved_name\\\": \\\""<< resolvedName <<"\\\"}}");''',
                               '}'],
         'service': {
             'producer': {
@@ -43,7 +43,7 @@ config = {
     'python': {
         'insert_code_after': [
             '''resolved_name = rospy.resolve_name({0})''',
-            '''rospy.logerr(f'{{{{"prefix": \"{0}\", "resource": \"{1}\", "type": \"{2}\","file": \"{3}\", "line": \"{4}\", "resolved_name": \"{{resolved_name}}\" }}}}')'''
+            '''rospy.logerr(f'{{{{"prefix": \"{0}\", "resource": \"{1}\", "type": \"{2}\","file": \"{3}\", "line": {4}, "resolved_name": \"{{resolved_name}}\" }}}}')'''
         ],
         'service': {
             'producer': {
