@@ -14,6 +14,10 @@ reg_sub_topic_py = config['python']['topics']['subscribers']['regex']
 reg_adv_service_py = config['python']['services']['advertiser']['regex']
 reg_call_service_py = config['python']['services']['callers']['regex']
 
+failinglines = [
+    'nh.advertiseService("/backend/ptu_limits/" + axisToString(axis) + "/get", &LensLimits::getCallback, this);',
+]
+
 
 class TestRegex(unittest.TestCase):
     def print_match(self, m):
