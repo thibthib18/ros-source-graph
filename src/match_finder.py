@@ -1,24 +1,18 @@
 import subprocess
 from typing import List, Optional, Tuple
 import re
-from src.common import ResourceConfig, Match
+from src.common import ResourceConfig, Match, grep
 
 
 def find_matches(config: ResourceConfig) -> List[Match]:
-    # grep command
-    cmd = fr'{config.grep_command} "{config.regex}" {config.target_dir}'
-    p = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE)
-    p.wait()
-    (out, _) = p.communicate()
-    # decode and filter out empty strings
-    filesLines = list(filter(None, out.decode('utf-8').split('\n')))
+    findings = grep(config.grep_command, config.regex, config.target_dir)
     matches = []
     # parse output
-    for fileLine in filesLines:
-        fileLineNumber, line = fileLine.split(' ', 1)
-        file, line_number = fileLineNumber.split(':')[0:2]
-        name, node_handle = parse_line(line, config.regex, config.language)
-        match = Match(config, file, int(line_number), name, node_handle)
+    for finding in findings:
+        file, line_number, line_content = finding
+        name, node_handle = parse_line(
+            line_content, config.regex, config.language)
+        match = Match(config, file, line_number, name, node_handle)
         matches.append(match)
     return matches
 

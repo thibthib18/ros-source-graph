@@ -1,8 +1,6 @@
 import re
 from typing import List
-from src.common import ResourceConfig, Match
-
-PREFIX = 'ROS_SOURCE_GRAPH_PREFIX'
+from src.common import ResourceConfig, Match, PREFIX
 
 
 def update_file(matches: List[Match]) -> None:

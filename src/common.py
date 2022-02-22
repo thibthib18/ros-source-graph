@@ -1,4 +1,7 @@
-from typing import Optional
+import subprocess
+from typing import List, Optional, Tuple
+
+PREFIX = 'ROS_SOURCE_GRAPH_PREFIX'
 
 
 class ResourceConfig(object):
@@ -29,3 +32,18 @@ class Match(object):
 
     def __str__(self):
         return str(self.__dict__)
+
+
+def grep(grep_command: str, regex: str, target_dir: str) -> List[Tuple[str, int, str]]:
+    cmd = fr'{grep_command} "{regex}" {target_dir}'
+    p = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE)
+    p.wait()
+    (out, _) = p.communicate()
+    # decode and filter out empty strings
+    lines = list(filter(None, out.decode('utf-8').split('\n')))
+    return list(map(parse_grep_line, lines))
+
+
+def parse_grep_line(line: str) -> Tuple[str, int, str]:
+    file, line_number, line_content = line.split(':', 2)
+    return file, int(line_number), line_content
