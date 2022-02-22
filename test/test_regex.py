@@ -2,21 +2,32 @@ from typing import List
 import unittest
 import re
 from src.config import config
-from src import main
+from src import match_finder
 
-reg_adv_topic_cpp = config['cpp']['topics']['advertiser']['regex']
-reg_sub_topic_cpp = config['cpp']['topics']['subscribers']['regex']
-reg_adv_service_cpp = config['cpp']['services']['advertiser']['regex']
-reg_call_service_cpp = config['cpp']['services']['callers']['regex']
+reg_adv_topic_cpp = config['cpp']['topic']['producer']['regex']
+reg_sub_topic_cpp = config['cpp']['topic']['consumer']['regex']
+reg_adv_service_cpp = config['cpp']['service']['producer']['regex']
+reg_call_service_cpp = config['cpp']['service']['consumer']['regex']
 
-reg_adv_topic_py = config['python']['topics']['advertiser']['regex']
-reg_sub_topic_py = config['python']['topics']['subscribers']['regex']
-reg_adv_service_py = config['python']['services']['advertiser']['regex']
-reg_call_service_py = config['python']['services']['callers']['regex']
+reg_adv_topic_py = config['python']['topic']['producer']['regex']
+reg_sub_topic_py = config['python']['topic']['consumer']['regex']
+reg_adv_service_py = config['python']['service']['producer']['regex']
+reg_call_service_py = config['python']['service']['consumer']['regex']
 
 failinglines = [
     'nh.advertiseService("/backend/ptu_limits/" + axisToString(axis) + "/get", &LensLimits::getCallback, this);',
+    'ptuStateWithPositionPublisher = nh().advertise<sv_msgs::PTUState_v2>("/debug/ptu_state/with_position", 1);',
+    'lens_pub = nh().advertise<sv_msgs::LensState>("/driver/req_lens_state", 1);',
+    '''lensCalibrationFeedbackSubscriber = nodeHandle.subscribe(
+        "/calibration/zoom_mapping_calibration_node/feedback", 1, &LensCalibration::onLensCalibrationFeedback, this);''',
+    '''rospy.Subscriber("/cinematography/start_action",
+        sv_msgs.msg.CinematographyAction,
+        self._action_callback,
+        queue_size=5)'''
 ]
+
+# Match group 1 only first arg
+r = r'\w*\.advertiseService\((.*)(,.*)/U'  # needs ungreedy
 
 
 class TestRegex(unittest.TestCase):
@@ -26,17 +37,24 @@ class TestRegex(unittest.TestCase):
         else:
             print('No match')
 
+    def test_parse_multilines(self):
+        line = failinglines[3]
+        regex = reg_sub_topic_cpp
+        result = match_finder.parse_line(line, regex, 'cpp')
+        m = re.search(regex, line, re.MULTILINE)
+        print(m.group(2))
+
     def test_parseline_cpp(self):
         line = 'fePublisher = privateNodeHandle.advertise<my_msgs::Float32Array>("get", 1, true);'
         regex = reg_adv_topic_cpp
-        result = main.parse_line(line, regex, 'cpp')
-        self.assertEqual(result['node_handle'], 'privateNodeHandle')
-        self.assertEqual(result['name'], '"get"')
+        result = match_finder.parse_line(line, regex, 'cpp')
+        self.assertEqual(result[0], '"get"')
+        self.assertEqual(result[1], 'privateNodeHandle')
 
     def test_parseline_python(self):
         line = 'self.name_publisher = rospy.Publisher("~name", String, queue_size=1)'
         regex = reg_adv_topic_py
-        result = main.parse_line(line, regex, 'python')
+        result = match_finder.parse_line(line, regex, 'python')
         self.assertEqual(result['name'], '"~name"')
 
     def reg_match_line(self, reg: str,  line: str, groups: List[str]):
